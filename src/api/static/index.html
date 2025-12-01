@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predicción de Envíos Logísticos</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; padding: 20px; }
+        .container { background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 500px; }
+        h2 { text-align: center; color: #333; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #666; font-weight: 500; }
+        select, input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-size: 14px; }
+        button { width: 100%; padding: 12px; background-color: #4a90e2; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; transition: background 0.3s; margin-top: 10px; }
+        button:hover { background-color: #357abd; }
+        #result { margin-top: 20px; padding: 15px; border-radius: 5px; text-align: center; font-weight: bold; display: none; }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🚚 Predicción de Demora</h2>
+    
+    <div class="form-group">
+        <label>Distancia (km)</label>
+        <input type="number" id="distance_km" placeholder="Ej. 150" value="50">
+    </div>
+    <div class="form-group">
+        <label>Peso del Paquete (kg)</label>
+        <input type="number" id="package_weight_kg" placeholder="Ej. 10" value="5">
+    </div>
+    <div class="form-group">
+        <label>Rating del Repartidor (1-5)</label>
+        <input type="number" id="delivery_rating" max="5" min="1" step="0.1" value="4.5">
+    </div>
+    <div class="form-group">
+        <label>Costo de Envío ($)</label>
+        <input type="number" id="delivery_cost" value="200">
+    </div>
+
+    <div class="form-group">
+        <label>Tipo de Vehículo</label>
+        <select id="vehicle_type">
+            <option value="truck">Truck (Camión)</option>
+            <option value="van">Van</option>
+            <option value="ev van">EV Van (Eléctrica)</option>
+            <option value="bike">Bike (Moto)</option>
+            <option value="ev bike">EV Bike (Moto Eléc.)</option>
+            <option value="scooter">Scooter</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Tipo de Paquete</label>
+        <select id="package_type">
+            <option value="electronics">Electronics</option>
+            <option value="clothing">Clothing</option>
+            <option value="furniture">Furniture</option>
+            <option value="cosmetics">Cosmetics</option>
+            <option value="groceries">Groceries</option>
+            <option value="fragile items">Fragile Items</option>
+            <option value="pharmacy">Pharmacy</option>
+            <option value="documents">Documents</option>
+            <option value="automobile parts">Automobile Parts</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Partner Logístico</label>
+        <select id="delivery_partner">
+            <option value="amazon logistics">Amazon Logistics</option>
+            <option value="dhl">DHL</option>
+            <option value="fedex">FedEx</option>
+            <option value="blue dart">Blue Dart</option>
+            <option value="delhivery">Delhivery</option>
+            <option value="ecom express">Ecom Express</option>
+            <option value="ekart">Ekart</option>
+            <option value="shadowfax">Shadowfax</option>
+            <option value="xpressbees">Xpressbees</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Clima</label>
+        <select id="weather_condition">
+            <option value="clear">Despejado (Clear)</option>
+            <option value="rainy">Lluvia (Rainy)</option>
+            <option value="foggy">Niebla (Foggy)</option>
+            <option value="cloudy">Nublado (Cloudy)</option>
+            <option value="stormy">Tormenta (Stormy)</option>
+            <option value="windy">Ventoso (Windy)</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Modalidad</label>
+        <select id="delivery_mode">
+            <option value="standard">Standard</option>
+            <option value="same day">Same Day</option>
+            <option value="express">Express</option>
+        </select>
+    </div>
+    
+    <input type="hidden" id="region" value="west"> 
+
+    <button onclick="predecir()">Calcular Tiempo Estimado</button>
+    
+    <div id="result"></div>
+</div>
+
+<script>
+    async function predecir() {
+        const btn = document.querySelector('button');
+        const resultDiv = document.getElementById('result');
+        
+        // Efecto visual de carga
+        btn.innerText = "Calculando...";
+        btn.disabled = true;
+        resultDiv.style.display = 'none';
+
+        // Recolectar datos
+        const data = {
+            distance_km: parseFloat(document.getElementById('distance_km').value),
+            package_weight_kg: parseFloat(document.getElementById('package_weight_kg').value),
+            delivery_rating: parseFloat(document.getElementById('delivery_rating').value),
+            delivery_cost: parseFloat(document.getElementById('delivery_cost').value),
+            
+            vehicle_type: document.getElementById('vehicle_type').value,
+            package_type: document.getElementById('package_type').value, // Aunque no se use en modelo, se envía si la API lo pide
+            delivery_partner: document.getElementById('delivery_partner').value, // Idem
+            
+            weather_condition: document.getElementById('weather_condition').value,
+            delivery_mode: document.getElementById('delivery_mode').value,
+            region: document.getElementById('region').value
+        };
+
+        try {
+            // Llamada a la API (Asumiendo que corre en puerto 8000)
+            const response = await fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                resultDiv.className = 'success';
+                resultDiv.innerHTML = `⏱️ Tiempo Estimado:<br><span style="font-size: 24px">${result.predicted_hours} Horas</span><br>(${result.predicted_minutes} minutos)`;
+            } else {
+                throw new Error(result.detail || 'Error en la predicción');
+            }
+        } catch (error) {
+            resultDiv.className = 'error';
+            resultDiv.innerText = "Error: " + error.message;
+        } finally {
+            btn.innerText = "Calcular Tiempo Estimado";
+            btn.disabled = false;
+            resultDiv.style.display = 'block';
+        }
+    }
+</script>
+
+</body>
+</html>
