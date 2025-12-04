@@ -6,7 +6,7 @@ from sklearn.model_selection import train_test_split
 import joblib
 
 def limpiar_tiempo(valor):
-    """Limpia el formato sucio de tiempo 1970..."""
+   
     try:
         valor_str = str(valor)
         horas = float(valor_str.split('.')[-1])
@@ -26,7 +26,7 @@ def load_and_clean_data(filepath, target_col):
         y = df[target_col]
         
    
-    features_num = ['distance_km', 'package_weight_kg', 'delivery_rating', 'delivery_cost']
+    features_num = ['distance_km', 'package_weight_kg','delivery_rating','delivery_cost']
     features_cat = ['vehicle_type', 'weather_condition', 'delivery_mode', 'region']
     
     
@@ -43,9 +43,11 @@ def build_pipeline(features_num, features_cat):
         ])
     return preprocessor
 
+# Funcione para guardar  el preprocesador
 def save_preprocessor(preprocessor, path):
     joblib.dump(preprocessor, path)
     print(f"Preprocessor guardado en {path}")
 
+# Función para cargar el preprocesador
 def load_preprocessor(path):
     return joblib.load(path)

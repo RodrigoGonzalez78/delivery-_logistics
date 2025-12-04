@@ -1,12 +1,12 @@
 data:
-  raw_path: "data/raw/delivery_dataset.csv" # Cambia esto por el nombre real
+  raw_path: "data/raw/data.csv"
   target_col: "delivery_time_hours"
 
 training:
   test_size: 0.2
   random_state: 42
   batch_size: 32
-  epochs: 50
+  epochs: 30
   learning_rate: 0.001
 
 model:
